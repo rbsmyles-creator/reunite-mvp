@@ -15,16 +15,10 @@ export async function getServerSideProps(context) {
     .eq('tag_code', code)
     .single();
 
-  return {
-    props: {
-      tag: data || null,
-      code
-    }
-  };
+  return { props: { tag: data || null, code } };
 }
 
 export default function TagPage({ tag, code }) {
-
   useEffect(() => {
     fetch('/api/page-scan', {
       method: 'POST',
@@ -34,34 +28,66 @@ export default function TagPage({ tag, code }) {
   }, [code]);
 
   if (!tag) {
-    return <h1>Tag not found</h1>;
+    return (
+      <main style={styles.page}>
+        <div style={styles.card}>
+          <h1>Tag not found</h1>
+          <p>This REUNITE tag is not active.</p>
+        </div>
+      </main>
+    );
   }
 
-  const whatsappLink = `https://wa.me/27${tag.parent_phone.slice(1)}?text=Hi, I found ${tag.child_name}'s bag.`;
+  const cleanPhone = tag.parent_phone.replace(/\D/g, '');
+  const whatsappPhone = cleanPhone.startsWith('0')
+    ? `27${cleanPhone.slice(1)}`
+    : cleanPhone;
+
+  const whatsappText = encodeURIComponent(
+    `Hi, I found ${tag.child_name}'s bag/item. I scanned the REUNITE tag.`
+  );
 
   return (
-    <main style={{ fontFamily: 'Arial', padding: 24, maxWidth: 500, margin: 'auto' }}>
-      <h1>Emergency Contact</h1>
-      <h2>{tag.child_name}</h2>
+    <main style={styles.page}>
+      <div style={styles.card}>
+        <div style={styles.badge}>REUNITE</div>
 
-      <p><strong>Medical notes:</strong> {tag.medical_notes}</p>
-      <p><strong>Parent:</strong> {tag.parent_name}</p>
+        <h1 style={styles.title}>Emergency Contact</h1>
 
-      <a href={`tel:${tag.parent_phone}`}>
-        <button>Call Parent</button>
-      </a>
+        <p style={styles.subtitle}>
+          I may be lost. Please help me get home.
+        </p>
 
-      <br /><br />
+        <div style={styles.childBox}>
+          <div style={styles.label}>Name</div>
+          <div style={styles.childName}>{tag.child_name}</div>
+        </div>
 
-      <a href={whatsappLink}>
-        <button>WhatsApp Parent</button>
-      </a>
+        <div style={styles.infoBox}>
+          <p><strong>Parent:</strong> {tag.parent_name}</p>
+          <p><strong>Medical notes:</strong> {tag.medical_notes || 'None listed'}</p>
+          <p><strong>Tag ID:</strong> {code}</p>
+        </div>
 
-      <br /><br />
+        <a href={`tel:${tag.parent_phone}`} style={styles.link}>
+          <button style={styles.primaryButton}>📞 Call Parent</button>
+        </a>
 
-      <button onClick={() => shareLocation(code)}>
-        Share My Location
-      </button>
+        <a
+          href={`https://wa.me/${whatsappPhone}?text=${whatsappText}`}
+          style={styles.link}
+        >
+          <button style={styles.whatsappButton}>💬 WhatsApp Parent</button>
+        </a>
+
+        <button style={styles.locationButton} onClick={() => shareLocation(code)}>
+          📍 Share My Location
+        </button>
+
+        <p style={styles.footer}>
+          Thank you for helping. Your kindness matters.
+        </p>
+      </div>
     </main>
   );
 }
@@ -111,3 +137,104 @@ function shareLocation(code) {
     }
   );
 }
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#f3f6fb',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    fontFamily: 'Arial, sans-serif'
+  },
+  card: {
+    background: 'white',
+    borderRadius: 22,
+    padding: 24,
+    maxWidth: 430,
+    width: '100%',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+    textAlign: 'center'
+  },
+  badge: {
+    display: 'inline-block',
+    background: '#0f766e',
+    color: 'white',
+    padding: '8px 16px',
+    borderRadius: 999,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    marginBottom: 14
+  },
+  title: {
+    fontSize: 30,
+    margin: '8px 0'
+  },
+  subtitle: {
+    color: '#555',
+    fontSize: 16
+  },
+  childBox: {
+    background: '#eefdf9',
+    borderRadius: 16,
+    padding: 16,
+    margin: '20px 0'
+  },
+  label: {
+    fontSize: 13,
+    color: '#666'
+  },
+  childName: {
+    fontSize: 28,
+    fontWeight: 'bold'
+  },
+  infoBox: {
+    textAlign: 'left',
+    background: '#f8fafc',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 18,
+    fontSize: 15
+  },
+  link: {
+    textDecoration: 'none'
+  },
+  primaryButton: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 14,
+    border: 'none',
+    background: '#0f172a',
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12
+  },
+  whatsappButton: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 14,
+    border: 'none',
+    background: '#16a34a',
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12
+  },
+  locationButton: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 14,
+    border: 'none',
+    background: '#2563eb',
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 14
+  },
+  footer: {
+    color: '#666',
+    fontSize: 13
+  }
+};
