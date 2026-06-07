@@ -24,6 +24,15 @@ export async function getServerSideProps(context) {
 }
 
 export default function TagPage({ tag, code }) {
+
+  useEffect(() => {
+    fetch('/api/page-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+  }, [code]);
+
   if (!tag) {
     return <h1>Tag not found</h1>;
   }
