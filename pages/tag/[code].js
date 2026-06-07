@@ -62,16 +62,42 @@ function shareLocation(code) {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(async (position) => {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
+  alert('Your phone may ask for location permission. Please tap Allow.');
 
-    await fetch('/api/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, latitude, longitude })
-    });
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
 
-    alert('Location shared. Thank you.');
-  });
+      await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, latitude, longitude })
+      });
+
+      alert('Location shared. Thank you.');
+    },
+    (error) => {
+      let message = 'Could not get location.';
+
+      if (error.code === 1) {
+        message = 'Location permission was blocked. Please allow location access in Safari settings.';
+      }
+
+      if (error.code === 2) {
+        message = 'Location unavailable. Please check that Location Services are turned on.';
+      }
+
+      if (error.code === 3) {
+        message = 'Location request timed out. Please try again.';
+      }
+
+      alert(message);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    }
+  );
 }
