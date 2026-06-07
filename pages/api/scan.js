@@ -27,5 +27,34 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
+  const message =
+`🚨 REUNITE ALERT
+
+Tag: ${code}
+
+Location:
+https://maps.google.com/?q=${latitude},${longitude}
+
+Latitude: ${latitude}
+Longitude: ${longitude}`;
+
+  try {
+    await fetch(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: message
+        })
+      }
+    );
+  } catch (e) {
+    console.error(e);
+  }
+
   return res.status(200).json({ success: true });
 }
